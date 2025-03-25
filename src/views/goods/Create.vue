@@ -230,9 +230,30 @@
           <!-- 商品详情 -->
           <div class="tab-pane" v-show="tabKey == 2">
             <a-form-item label="商品详情" :labelCol="labelCol" :wrapperCol="{span: 16}">
-              <Ueditor
-                v-decorator="['content', { rules: [{ required: true, message: '商品详情不能为空'  }] }]"
-              />
+              <div v-for="(section, index) in content" :key="index" class="content-section">
+                <div class="section-header" style="margin-bottom: 15px;">
+                  <a-input 
+                    v-model="section.title"
+                    placeholder="请输入分段标题"
+                    style="width: 200px; margin-right: 10px;"
+                  />
+                  <a-button 
+                    type="link" 
+                    icon="delete"
+                    @click="removeSection(index)"
+                    v-if="content.length > 1"
+                  >删除分段</a-button>
+                </div>
+                <Ueditor
+                  v-model="section.content"
+                  :config="{}"
+                />
+              </div>
+              <div style="margin-top: 15px;">
+                <a-button type="dashed" block @click="addSection">
+                  <a-icon type="plus" />添加分段
+                </a-button>
+              </div>
             </a-form-item>
           </div>
 
@@ -409,7 +430,12 @@ export default {
       // 当前表单元素
       form: this.$form.createForm(this),
       // 表单数据
-      formData: GoodsModel.formData
+      formData: GoodsModel.formData,
+      // 商品详情分段
+      content: [{
+        title: '',
+        content: ''
+      }]
     }
   },
   // 初始化数据
@@ -462,6 +488,19 @@ export default {
       })
     },
 
+    // 添加新的内容分段
+    addSection() {
+      this.content.push({
+        title: '',
+        content: ''
+      })
+    },
+
+    // 删除内容分段
+    removeSection(index) {
+      this.content.splice(index, 1)
+    },
+
     // 确认按钮
     handleSubmit (e) {
       e.preventDefault()
@@ -473,6 +512,24 @@ export default {
           this.onTargetTabError(errors)
           return false
         }
+        // 验证商品详情分段
+        if (this.content.length === 0) {
+          this.$message.error('请至少添加一个商品详情分段')
+          this.tabKey = 2
+          return false
+        }
+        // 检查每个分段是否有内容
+        const emptySection = this.content.find(section => !section.content)
+        if (emptySection) {
+          this.$message.error('商品详情分段内容不能为空')
+          this.tabKey = 2
+          return false
+        }
+        // 处理商品详情分段内容
+        values.content = this.content.map(section => ({
+          title: section.title || '',
+          content: section.content || ''
+        }))
         // 验证多规格
         if (values.spec_type === 20) {
           const MultiSpec = this.$refs.MultiSpec
