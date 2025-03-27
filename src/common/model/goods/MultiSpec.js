@@ -90,8 +90,10 @@ export default class MultiSpec {
    * @param {array} specList 规格列表
    * @param {array} skuList SKU列表
    */
-  constructor() {
+  constructor () {
     this.multiSpecData = {
+      // 是否是多选规格
+      isMulti: false,
       // 规格列表
       specList: [],
       // SKU列表
@@ -247,6 +249,7 @@ export default class MultiSpec {
     specList.push({
       key: specList.length || 0,
       spec_name: '',
+      spec_type: 'text', // 默认为文本类型 多了个date类型
       valueList: []
     })
     // 默认规格值
@@ -258,11 +261,16 @@ export default class MultiSpec {
   handleAddSpecValue (groupIndex) {
     const specGroupItem = this.multiSpecData.specList[groupIndex]
     const specValueList = specGroupItem.valueList
-    specValueList.push({
+    const newSpecValue = {
       key: specValueList.length || 0,
       groupKey: specGroupItem.key,
       spec_value: ''
-    })
+    }
+    // 如果是日期类型，添加spec_date属性
+    if (specGroupItem.spec_type === 'date') {
+      newSpecValue.spec_date = null
+    }
+    specValueList.push(newSpecValue)
     // 刷新规格值的key
     this.onRefreshSpecValueKey(groupIndex)
   }
