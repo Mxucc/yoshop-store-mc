@@ -92,7 +92,7 @@
       :wrapperCol="wrapperCol"
     >
       <!-- 批量设置 -->
-      <div v-if="multiSpecData.skuList.length > 1" class="sku-batch">
+      <div v-if="multiSpecData.skuList && multiSpecData.skuList.length > 1" class="sku-batch">
         <span class="title">批量设置:</span>
         <a-input-number
           v-model="multiSpecData.skuBatchForm.goods_price"

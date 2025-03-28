@@ -163,25 +163,26 @@ export default class MultiSpec {
   buildSkuList (cartesianList) {
     // 生成新的skuList
     const newSkuList = []
-    for (let i = 0; i < cartesianList.length; i++) {
-      const newSkuItem = {
-        ...defaultSkuItemData,
-        key: i,
-        // tempId用于合并旧记录
-        tempId: cartesianList[i].map(item => item.spec_value).join('_'),
-        // skuKeys用于传参给后端
-        skuKeys: cartesianList[i].map(item => {
-          return {
-            groupKey: item.groupKey,
-            valueKey: item.key
-          }
-        })
-      }
-      cartesianList[i].forEach((val, idx) => {
-        newSkuItem[`spec_value_${idx}`] = val.spec_value
+    // 遍历规格组
+    this.multiSpecData.specList.forEach((specGroup, groupIndex) => {
+      // 遍历规格值
+      specGroup.valueList.forEach((specValue, valueIndex) => {
+        const newSkuItem = {
+          ...defaultSkuItemData,
+          key: newSkuList.length,
+          // tempId用于合并旧记录
+          tempId: `${specGroup.spec_name}_${specValue.spec_value}`,
+          // skuKeys用于传参给后端
+          skuKeys: [{
+            groupKey: specGroup.key,
+            valueKey: specValue.key
+          }],
+          spec_group_name: specGroup.spec_name,
+          spec_value: specValue.spec_value
+        }
+        newSkuList.push(newSkuItem)
       })
-      newSkuList.push(newSkuItem)
-    }
+    })
     // 兼容旧的sku数据
     this.multiSpecData.skuList = this.oldSkuList(newSkuList)
   }
@@ -215,31 +216,54 @@ export default class MultiSpec {
 
   // 生成sku表格字段名
   buildSkuColumns (rowSpanArr) {
-    const specList = this.multiSpecData.specList
-    const newColumns = defaultColumns.concat()
-    // 渲染字段的rowSpan
-    const customRender = (specIndex, value, row, index) => {
-      const obj = {
-        children: value,
-        attrs: {}
+    const newColumns = [
+      {
+        title: '规格组',
+        dataIndex: 'spec_group_name',
+        width: 120
+      },
+      {
+        title: '规格值',
+        dataIndex: 'spec_value',
+        width: 120
+      },
+      {
+        title: '预览图',
+        dataIndex: 'image',
+        width: 90,
+        scopedSlots: { customRender: 'image' }
+      },
+      {
+        title: '商品价格',
+        dataIndex: 'goods_price',
+        width: 120,
+        scopedSlots: { customRender: 'goods_price' }
+      },
+      {
+        title: '划线价格',
+        dataIndex: 'line_price',
+        width: 120,
+        scopedSlots: { customRender: 'line_price' }
+      },
+      {
+        title: '库存数量',
+        dataIndex: 'stock_num',
+        width: 120,
+        scopedSlots: { customRender: 'stock_num' }
+      },
+      {
+        title: '商品重量 (KG)',
+        dataIndex: 'goods_weight',
+        width: 120,
+        scopedSlots: { customRender: 'goods_weight' }
+      },
+      {
+        title: 'SKU编码',
+        dataIndex: 'goods_sku_no',
+        width: 140,
+        scopedSlots: { customRender: 'goods_sku_no' }
       }
-      const rowSpan = rowSpanArr[specIndex - 1]
-      if ((index % rowSpan) === 0) {
-        obj.attrs.rowSpan = rowSpan
-      } else {
-        obj.attrs.rowSpan = 0
-      }
-      return obj
-    }
-    // 遍历规格组整理字段
-    for (let specIndex = specList.length; specIndex > 0; specIndex--) {
-      const specGroupItem = specList[specIndex - 1]
-      newColumns.unshift({
-        title: specGroupItem.spec_name,
-        dataIndex: `spec_value_${specIndex - 1}`,
-        customRender: (value, row, index) => customRender(specIndex, value, row, index)
-      })
-    }
+    ]
     this.multiSpecData.skuColumns = newColumns
   }
 
