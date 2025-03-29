@@ -1,8 +1,17 @@
 <template>
   <div>
     <a-form-item label="商品规格" :labelCol="labelCol" :wrapperCol="wrapperCol">
-      <div v-if="true" class="form-item-help" style="line-height: 36px">
+      <div class="form-item-help" style="line-height: 36px">
         <small>最多添加3个商品规格组，生成的SKU数量不能超出50个</small>
+        <a-radio-group
+          v-if="!isSpecLocked"
+          v-model="multiSpecData.isMulti"
+          style="margin-left: 20px;"
+          @change="onChangeMultiMode"
+        >
+          <a-radio :value="false">单选规格</a-radio>
+          <a-radio :value="true">多选规格</a-radio>
+        </a-radio-group>
       </div>
       <!-- 规格组 -->
       <div class="spec-group" v-for="(item, index) in multiSpecData.specList" :key="index">
@@ -14,6 +23,15 @@
             placeholder="请输入规格名称"
             @change="onChangeSpecGroupIpt"
           />
+          <a-select
+            v-if="!isSpecLocked"
+            class="group-item-type"
+            v-model="item.spec_type"
+            @change="onChangeSpecType(index)"
+          >
+            <a-select-option value="text">文本</a-select-option>
+            <a-select-option value="date">日期</a-select-option>
+          </a-select>
           <a
             v-if="!isSpecLocked"
             class="group-item-delete"
@@ -23,13 +41,26 @@
         </div>
         <div class="spec-value clearfix">
           <div class="spec-value-item" v-for="(itm, idx) in item.valueList" :key="idx">
-            <a-input
-              class="value-item-input"
-              v-model="itm.spec_value"
-              :readOnly="isSpecLocked"
-              placeholder="请输入规格值"
-              @change="onChangeSpecValueIpt"
-            />
+            <!-- 根据规格类型显示不同的输入控件 -->
+            <template v-if="item.spec_type === 'date'">
+              <a-range-picker
+                class="value-item-input"
+                v-model="itm.spec_date_range"
+                :disabled="isSpecLocked"
+                @change="(dates, dateStrings) => onChangeDateRangePicker(dates, dateStrings, itm)"
+                format="YYYY-MM-DD"
+                :placeholder="['出售开始日期', '出售截止日期']"
+              />
+            </template>
+            <template v-else>
+              <a-input
+                class="value-item-input"
+                v-model="itm.spec_value"
+                :readOnly="isSpecLocked"
+                placeholder="请输入规格值"
+                @change="onChangeSpecValueIpt"
+              />
+            </template>
             <a-icon
               v-if="!isSpecLocked"
               class="icon-close"
@@ -38,7 +69,7 @@
               @click="handleDeleteSpecValue(index, idx)"
             />
           </div>
-          <div v-if="!isSpecLocked" class="spec-value-add">
+          <div v-if="!isSpecLocked && item.spec_type != 'date'" class="spec-value-add">
             <a
               class="group-item-delete"
               href="javascript:;"
@@ -68,6 +99,13 @@
           v-model="multiSpecData.skuBatchForm.goods_price"
           placeholder="商品价格"
           :min="0.01"
+          :precision="2"
+        />
+        <a-input-number
+          v-if="item.spec_type === 'date'"
+          v-model="multiSpecData.skuBatchForm.holiday_price"
+          placeholder="节假日价格"
+          :min="0"
           :precision="2"
         />
         <a-input-number
@@ -111,6 +149,10 @@
         <!-- 商品价格 -->
         <template slot="goods_price" slot-scope="text, item">
           <a-input-number v-model="item.goods_price" size="small" :min="0.01" :precision="2" />
+        </template>
+        <!-- 节假日价格 -->
+        <template slot="holiday_price" slot-scope="text, item">
+          <a-input-number v-model="item.holiday_price" size="small" :min="0" :precision="2" />
         </template>
         <!-- 划线价格 -->
         <template slot="line_price" slot-scope="text, item">
@@ -160,6 +202,8 @@ export default {
       MultiSpecModel: new MultiSpecModel(),
       // MultiSpecModel: Object,
       multiSpecData: {
+        // 是否是多选规格
+        isMulti: false,
         // 规格列表
         specList: [],
         // SKU列表
@@ -185,6 +229,63 @@ export default {
     getData () {
       const { defaultSpecList, defaultSkuList } = this
       this.multiSpecData = this.MultiSpecModel.getData(defaultSpecList, defaultSkuList)
+      // 处理日期类型规格的spec_date_range
+      this.multiSpecData.specList.forEach(specGroup => {
+        if (specGroup.spec_type === 'date') {
+          specGroup.valueList.forEach(item => {
+            // 如果spec_value存在且包含日期范围格式（开始日期~结束日期）
+            if (item.spec_value && item.spec_value.includes('~')) {
+              const dateRange = item.spec_value.split('~')
+              // 确保spec_date_range是数组类型
+              if (!Array.isArray(item.spec_date_range)) {
+                item.spec_date_range = []
+              }
+              // 设置日期范围值
+              item.spec_date_range = dateRange
+            }
+          })
+        }
+      })
+    },
+    // 规格类型变化事件
+    onChangeSpecType (groupIndex) {
+      const specGroup = this.multiSpecData.specList[groupIndex]
+      // 如果切换到日期类型，为每个规格值添加spec_date_range属性
+      if (specGroup.spec_type === 'date') {
+        specGroup.valueList.forEach(item => {
+          // 确保spec_date_range是数组类型
+          if (!Array.isArray(item.spec_date_range)) {
+            item.spec_date_range = []
+          }
+          // 如果spec_value已经存在且包含日期范围格式，解析并设置到spec_date_range
+          if (item.spec_value && item.spec_value.includes('~')) {
+            const dateRange = item.spec_value.split('~')
+            item.spec_date_range = dateRange
+          }
+        })
+      }
+      // 更新skuList
+      this.MultiSpecModel.onUpdate(true)
+    },
+    // 单选/多选模式变化事件
+    onChangeMultiMode () {
+      // 更新skuList
+      this.MultiSpecModel.onUpdate(true)
+    },
+    // 日期选择器变化事件
+    onChangeDatePicker (date, dateString, item) {
+      // 将日期字符串赋值给spec_value，确保与现有逻辑兼容
+      item.spec_value = dateString
+      // 更新skuList
+      this.MultiSpecModel.onUpdate(true)
+    },
+    // 日期范围选择器变化事件
+    onChangeDateRangePicker (dates, dateStrings, item) {
+      // 将日期范围字符串拼接后赋值给spec_value，确保与现有逻辑兼容
+      // 格式：开始日期~结束日期
+      item.spec_value = dateStrings[0] + '~' + dateStrings[1]
+      // 更新skuList
+      this.MultiSpecModel.onUpdate(true)
     },
 
     // 获取规格及SKU信息(表单提交)
@@ -306,6 +407,11 @@ export default {
     .group-item-input {
       float: left;
       width: 180px;
+    }
+    .group-item-type {
+      float: left;
+      width: 100px;
+      margin-left: 10px;
     }
 
     .group-item-delete {

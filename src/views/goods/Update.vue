@@ -238,19 +238,25 @@
           </div>
           <!-- 商品详情 -->
           <div class="tab-pane" v-show="tabKey == 2">
-            <a-form-item label="商品详情" :labelCol="labelCol" :wrapperCol="{span: 16}">
-              <div v-for="(section, index) in content" :key="index" class="content-section">
+            <a-form-item label="固定详情内容" :labelCol="labelCol" :wrapperCol="{span: 16}">
+              <Ueditor
+                v-model="content.text"
+                :config="{}"
+              />
+            </a-form-item>
+            <a-form-item label="分段内容" :labelCol="labelCol" :wrapperCol="{span: 16}">
+              <div v-for="(section, index) in content.list" :key="index" class="content-section">
                 <div class="section-header" style="margin-bottom: 15px;">
-                  <a-input 
+                  <a-input
                     v-model="section.title"
                     placeholder="请输入分段标题"
                     style="width: 200px; margin-right: 10px;"
                   />
-                  <a-button 
-                    type="link" 
+                  <a-button
+                    type="link"
                     icon="delete"
                     @click="removeSection(index)"
-                    v-if="content.length > 1"
+                    v-if="content.list.length > 1"
                   >删除分段</a-button>
                 </div>
                 <Ueditor
@@ -263,6 +269,12 @@
                   <a-icon type="plus" />添加分段
                 </a-button>
               </div>
+            </a-form-item>
+            <a-form-item label="尾部声明" :labelCol="labelCol" :wrapperCol="{span: 16}">
+              <Ueditor
+                v-model="content.end"
+                :config="{}"
+              />
             </a-form-item>
           </div>
 
@@ -450,11 +462,15 @@ export default {
       form: this.$form.createForm(this),
       // 商品ID
       goodsId: null,
-      // 商品详情分段
-      content: [{
-        title: '',
-        content: ''
-      }],
+      // 商品详情
+      content: {
+        text: '', // 固定详情内容
+        list: [{ // 分段内容
+          title: '',
+          content: ''
+        }],
+        end: '' // 尾部声明
+      },
       // 表单数据
       formData: GoodsModel.formData
     }
@@ -469,24 +485,28 @@ export default {
   },
   methods: {
     // 添加新的内容分段
-    addSection() {
-      this.content.push({
+    addSection () {
+      this.content.list.push({
         title: '',
         content: ''
       })
     },
 
     // 删除内容分段
-    removeSection(index) {
-      this.content.splice(index, 1)
+    removeSection (index) {
+      this.content.list.splice(index, 1)
     },
 
-    // 获取所有分段内容
-    getcontent() {
-      return this.content.map(section => ({
-        title: section.title,
-        content: section.content
-      }))
+    // 获取所有内容
+    getcontent () {
+      return {
+        text: this.content.text,
+        list: this.content.list.map(section => ({
+          title: section.title,
+          content: section.content
+        })),
+        end: this.content.end
+      }
     },
 
     // 初始化数据
@@ -499,7 +519,16 @@ export default {
         .then(() => {
           // 初始化商品详情内容
           if (GoodsModel.formData.goods.content) {
-            this.content = GoodsModel.formData.goods.content
+            // 处理旧数据格式兼容
+            if (Array.isArray(GoodsModel.formData.goods.content)) {
+              this.content = {
+                text: '',
+                list: GoodsModel.formData.goods.content,
+                end: ''
+              }
+            } else {
+              this.content = GoodsModel.formData.goods.content
+            }
           }
           // 商品表单数据
           if (!isEmptyObject(this.form.getFieldsValue())) {
@@ -576,23 +605,27 @@ export default {
           values.specData = MultiSpec.getFromSpecData()
         }
         // 验证商品详情分段
-        if (this.content.length === 0) {
+        if (this.content.list.length === 0) {
           this.$message.error('请至少添加一个商品详情分段')
           this.tabKey = 2
           return false
         }
         // 检查每个分段是否有内容
-        const emptySection = this.content.find(section => !section.content)
+        const emptySection = this.content.list.find(section => !section.content)
         if (emptySection) {
           this.$message.error('商品详情分段内容不能为空')
           this.tabKey = 2
           return false
         }
-        // 处理商品详情分段内容
-        values.content = this.content.map(section => ({
-          title: section.title || '',
-          content: section.content || ''
-        }))
+        // 处理商品详情内容
+        values.content = {
+          text: this.content.text || '',
+          list: this.content.list.map(section => ({
+            title: section.title || '',
+            content: section.content || ''
+          })),
+          end: this.content.end || ''
+        }
         // 整理商品分类ID集
         values.categoryIds = values.categorys.map(item => item.value)
         delete values.categorys
