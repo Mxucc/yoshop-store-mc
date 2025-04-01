@@ -63,7 +63,7 @@
 
 <script>
 import _ from 'lodash'
-import { linkList, LINK_TYPE_PAGE, LINK_TYPE_CUSTOM, LINK_TYPE_MP_WEIXIN, LINK_TYPE_URL } from '@/common/model/Links'
+import { linkList, LINK_TYPE_PAGE, LINK_TYPE_CUSTOM, LINK_TYPE_MP_WEIXIN, LINK_TYPE_MP_VIDEO, LINK_TYPE_URL } from '@/common/model/Links'
 import { inArray, buildUrL } from '@/utils/util'
 
 export default {

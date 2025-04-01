@@ -128,14 +128,15 @@
                 @change="onForceUpdate()"
               >
                 <a-radio :value="10" :disabled="formData.goods.isSpecLocked">单规格</a-radio>
-                <a-radio :value="20" :disabled="formData.goods.isSpecLocked">多规格</a-radio>
+                <a-radio :value="20" :disabled="formData.goods.isSpecLocked">多选多规格</a-radio>
+                <a-radio :value="30" :disabled="formData.goods.isSpecLocked">单选多规格</a-radio>
               </a-radio-group>
               <p v-if="formData.goods.isSpecLocked" class="form-item-help">
                 <small class="c-red">注：该商品当前正在参与其他活动，商品规格不允许更改</small>
               </p>
             </a-form-item>
             <!-- 多规格的表单内容 -->
-            <div v-if="form.getFieldValue('spec_type') == 20">
+            <div v-if="form.getFieldValue('spec_type') == 20 || form.getFieldValue('spec_type') == 30">
               <MultiSpec
                 ref="MultiSpec"
                 :isSpecLocked="formData.goods.isSpecLocked"
@@ -595,7 +596,7 @@ export default {
           return false
         }
         // 验证多规格
-        if (values.spec_type === 20) {
+        if (values.spec_type === 20 || values.spec_type === 30) {
           const MultiSpec = this.$refs.MultiSpec
           if (!MultiSpec.verifyForm()) {
             this.tabKey = 1

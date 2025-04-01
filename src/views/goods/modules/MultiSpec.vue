@@ -3,15 +3,7 @@
     <a-form-item label="商品规格" :labelCol="labelCol" :wrapperCol="wrapperCol">
       <div class="form-item-help" style="line-height: 36px">
         <small>最多添加3个商品规格组，生成的SKU数量不能超出50个</small>
-        <a-radio-group
-          v-if="!isSpecLocked"
-          v-model="multiSpecData.isMulti"
-          style="margin-left: 20px;"
-          @change="onChangeMultiMode"
-        >
-          <a-radio :value="false">单选规格</a-radio>
-          <a-radio :value="true">多选规格</a-radio>
-        </a-radio-group>
+
       </div>
       <!-- 规格组 -->
       <div class="spec-group" v-for="(item, index) in multiSpecData.specList" :key="index">
@@ -190,7 +182,9 @@ export default {
     // 默认的SKU列表
     defaultSkuList: PropTypes.array.def([]),
     // 商品规格是否锁定(锁定状态下不允许编辑规格)
-    isSpecLocked: PropTypes.bool.def(false)
+    isSpecLocked: PropTypes.bool.def(false),
+    // 规格类型（20:多选多规格，30:单选多规格）
+    specType: PropTypes.number.def(20)
   },
   data () {
     return {
@@ -202,8 +196,6 @@ export default {
       MultiSpecModel: new MultiSpecModel(),
       // MultiSpecModel: Object,
       multiSpecData: {
-        // 是否是多选规格
-        isMulti: false,
         // 规格列表
         specList: [],
         // SKU列表
@@ -227,8 +219,12 @@ export default {
 
     // 获取规格及SKU信息(展示)
     getData () {
-      const { defaultSpecList, defaultSkuList } = this
+      const { defaultSpecList, defaultSkuList, specType } = this
       this.multiSpecData = this.MultiSpecModel.getData(defaultSpecList, defaultSkuList)
+      // 根据规格类型设置是否多选
+      this.multiSpecData.isMulti = specType === 20
+      // 更新规格类型
+      this.$emit('update:specType', this.multiSpecData.isMulti ? 20 : 30)
       // 处理日期类型规格的spec_date_range
       this.multiSpecData.specList.forEach(specGroup => {
         if (specGroup.spec_type === 'date') {
@@ -269,6 +265,8 @@ export default {
     },
     // 单选/多选模式变化事件
     onChangeMultiMode () {
+      // 更新规格类型
+      this.$emit('update:specType', this.multiSpecData.isMulti ? 20 : 30)
       // 更新skuList
       this.MultiSpecModel.onUpdate(true)
     },

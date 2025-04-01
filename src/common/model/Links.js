@@ -9,6 +9,9 @@ export const LINK_TYPE_CUSTOM = 'CUSTOM'
 // 链接类型 - 跳转微信小程序
 export const LINK_TYPE_MP_WEIXIN = 'MP-WEIXIN'
 
+// 链接类型 - 跳转微信视频号
+export const LINK_TYPE_MP_VIDEO = 'MP-VIDEO'
+
 // 链接类型 - H5外链
 export const LINK_TYPE_URL = 'URL'
 
@@ -318,6 +321,29 @@ const other = {
           lable: '链接地址',
           required: true,
           tips: '请输入以https://或http://开头的链接'
+        }
+      ]
+    },
+    {
+      id: 'f5a7b2c',
+      title: '跳转微信视频号',
+      type: LINK_TYPE_MP_VIDEO,
+      alert: '仅支持在微信环境中跳转视频号，不支持从其他客户端跳转',
+      param: {
+        feedId: '',
+        finderUserName: ''
+      },
+      form: [
+        {
+          key: 'finderUserName',
+          lable: '视频号ID',
+          required: true,
+          tips: '填写要跳转的微信视频号ID'
+        },
+        {
+          key: 'feedId',
+          lable: '视频ID',
+          tips: '填写要跳转的具体视频ID，不填则跳转到视频号主页'
         }
       ]
     },

@@ -187,6 +187,12 @@ export default class MultiSpec {
       cartesianList[i].forEach((val, idx) => {
         newSkuItem[`spec_value_${idx}`] = val.spec_value
       })
+      // 在非多选模式下，每个规格组的SKU价格独立设置
+      if (!this.multiSpecData.isMulti) {
+        newSkuItem.goods_price = ''
+        newSkuItem.holiday_price = ''
+        newSkuItem.line_price = ''
+      }
       newSkuList.push(newSkuItem)
     }
     // 兼容旧的sku数据
@@ -210,9 +216,19 @@ export default class MultiSpec {
       }
       // 写入新纪录
       if (oldSkuItem) {
-        newSkuList[index] = {
-          ...newSkuList[index],
-          ..._.pick(oldSkuItem, Object.keys(defaultSkuItemData))
+        // 在非多选模式下，保留新生成的价格字段为空，不从旧记录中继承价格
+        if (!this.multiSpecData.isMulti) {
+          const priceFields = ['goods_price', 'holiday_price', 'line_price']
+          const filteredKeys = Object.keys(defaultSkuItemData).filter(key => !priceFields.includes(key))
+          newSkuList[index] = {
+            ...newSkuList[index],
+            ..._.pick(oldSkuItem, filteredKeys)
+          }
+        } else {
+          newSkuList[index] = {
+            ...newSkuList[index],
+            ..._.pick(oldSkuItem, Object.keys(defaultSkuItemData))
+          }
         }
         // console.log(newSkuList[index].image)
       }
@@ -230,11 +246,14 @@ export default class MultiSpec {
         children: value,
         attrs: {}
       }
-      const rowSpan = rowSpanArr[specIndex - 1]
-      if ((index % rowSpan) === 0) {
-        obj.attrs.rowSpan = rowSpan
-      } else {
-        obj.attrs.rowSpan = 0
+      // 在多选模式下应用rowSpan属性，单选模式下每个规格值显示在独立行
+      if (this.multiSpecData.isMulti) {
+        const rowSpan = rowSpanArr[specIndex - 1]
+        if ((index % rowSpan) === 0) {
+          obj.attrs.rowSpan = rowSpan
+        } else {
+          obj.attrs.rowSpan = 0
+        }
       }
       return obj
     }
@@ -266,15 +285,27 @@ export default class MultiSpec {
 
   // 添加规格值
   handleAddSpecValue (groupIndex) {
+    // 检查索引是否有效
+    if (groupIndex === undefined || groupIndex < 0 || !this.multiSpecData.specList[groupIndex]) {
+      console.error('Invalid groupIndex in handleAddSpecValue:', groupIndex)
+      return
+    }
+    
     const specGroupItem = this.multiSpecData.specList[groupIndex]
+    // 确保specGroupItem有valueList属性
+    if (!specGroupItem.valueList) {
+      specGroupItem.valueList = []
+    }
+    
     const specValueList = specGroupItem.valueList
     const newSpecValue = {
       key: specValueList.length || 0,
       groupKey: specGroupItem.key,
       spec_value: ''
     }
+    
     // 如果是日期类型，添加spec_date_range属性
-    if (specGroupItem.spec_type === 'date') {
+    if (specGroupItem.spec_type && specGroupItem.spec_type === 'date') {
       // 初始化为空数组
       newSpecValue.spec_date_range = []
       // 如果spec_value已经存在且包含日期范围格式，解析并设置到spec_date_range

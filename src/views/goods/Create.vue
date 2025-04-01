@@ -126,12 +126,13 @@
                 @change="onForceUpdate()"
               >
                 <a-radio :value="10">单规格</a-radio>
-                <a-radio :value="20">多规格</a-radio>
+                <a-radio :value="20">多选多规格</a-radio>
+                <a-radio :value="30">单选多规格</a-radio>
               </a-radio-group>
             </a-form-item>
             <!-- 多规格的表单内容 -->
-            <div v-show="form.getFieldValue('spec_type') == 20">
-              <MultiSpec ref="MultiSpec" />
+            <div v-show="form.getFieldValue('spec_type') == 20 || form.getFieldValue('spec_type') == 30">
+              <MultiSpec ref="MultiSpec" :spec-type="form.getFieldValue('spec_type')" />
             </div>
             <!-- 单规格的表单内容 -->
             <div v-show="form.getFieldValue('spec_type') == 10">
@@ -547,7 +548,7 @@ export default {
           end: this.content.end || ''
         }
         // 验证多规格
-        if (values.spec_type === 20) {
+        if (values.spec_type === 20 || values.spec_type === 30) {
           const MultiSpec = this.$refs.MultiSpec
           if (!MultiSpec.verifyForm()) {
             this.tabKey = 1
