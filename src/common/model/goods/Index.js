@@ -80,7 +80,7 @@ export default {
       'is_points_discount', 'is_enable_grade', 'is_alone_grade'
     ])
     return {
-      ...goodsFormData
+      ...goodsFormData,
     }
   },
 
@@ -89,18 +89,18 @@ export default {
     const goodsInfo = this.formData.goods
     let goodsFormData = {}
     // 运费模板 (仅实物商品存在运费模板和配送设置)
-    if (goodsInfo.goods_type === 10) {
+    if (goodsInfo.goods_type == 10) {
       goodsFormData['delivery_id'] = goodsInfo['delivery_id']
       goodsFormData['is_ind_delivery_type'] = goodsInfo['is_ind_delivery_type']
       goodsFormData['delivery_type'] = goodsInfo['delivery_type']
     }
     // 单规格数据
-    if (goodsInfo.spec_type === 10) {
+    if (goodsInfo.spec_type == 10) {
       const skuOne = _.pick(goodsInfo.skuList[0], ['goods_price', 'line_price', 'stock_num', 'goods_weight'])
       goodsFormData = { ...goodsFormData, ...skuOne }
     }
     // 商品限购数据
-    if (goodsInfo.is_restrict === 1) {
+    if (goodsInfo.is_restrict == 1) {
       goodsFormData['restrict_total'] = goodsInfo['restrict_total']
       goodsFormData['restrict_single'] = goodsInfo['restrict_single']
     }

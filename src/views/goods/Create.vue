@@ -237,14 +237,14 @@
             </a-form-item>
             <a-form-item label="分段内容" :labelCol="labelCol" :wrapperCol="{span: 16}">
               <div v-for="(section, index) in content.list" :key="index" class="content-section">
-                <div class="section-header" style="margin-bottom: 15px;">
-                  <a-input
+            <div class="section-header" style="margin-bottom: 15px;">
+                  <a-input 
                     v-model="section.title"
                     placeholder="请输入分段标题"
                     style="width: 200px; margin-right: 10px;"
                   />
-                  <a-button
-                    type="link"
+                  <a-button 
+                    type="link" 
                     icon="delete"
                     @click="removeSection(index)"
                     v-if="content.list.length > 1"
@@ -268,6 +268,7 @@
               />
             </a-form-item>
           </div>
+
           <!-- 更多设置 -->
           <div class="tab-pane" v-show="tabKey == 3">
             <a-form-item
@@ -526,7 +527,7 @@ export default {
         if (errors) {
           this.onTargetTabError(errors)
           return false
-        }
+        } 
         // 如果有商品详情分段内容，则进行验证
         if (this.content.list && this.content.list.length > 0) {
           // 检查每个分段是否有内容
@@ -537,13 +538,13 @@ export default {
             return false
           }
         }
-        // 处理商品详情分段内容
+        // 处理商品详情分段内容 
         values.content = {
           text: this.content.text || '',
           list: this.content.list.map(section => ({
-            title: section.title || '',
-            content: section.content || ''
-          })),
+          title: section.title || '',
+          content: section.content || ''
+        })),
           end: this.content.end || ''
         }
         // 验证多规格

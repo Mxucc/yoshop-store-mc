@@ -237,7 +237,7 @@
             </a-form-item>
           </div>
           <!-- 商品详情 -->
-          <div class="tab-pane" v-show="tabKey == 2">
+          <div class="tab-pane" v-show="tabKey == 2"> 
             <a-form-item label="固定详情内容" :labelCol="labelCol" :wrapperCol="{span: 16}">
               <Ueditor
                 v-model="content.text"
@@ -246,14 +246,14 @@
             </a-form-item>
             <a-form-item label="分段内容" :labelCol="labelCol" :wrapperCol="{span: 16}">
               <div v-for="(section, index) in content.list" :key="index" class="content-section">
-                <div class="section-header" style="margin-bottom: 15px;">
-                  <a-input
+               <div class="section-header" style="margin-bottom: 15px;">
+                  <a-input 
                     v-model="section.title"
                     placeholder="请输入分段标题"
                     style="width: 200px; margin-right: 10px;"
                   />
-                  <a-button
-                    type="link"
+                  <a-button 
+                    type="link" 
                     icon="delete"
                     @click="removeSection(index)"
                     v-if="content.list.length > 1"

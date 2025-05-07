@@ -17,12 +17,6 @@ const defaultColumns = [
     scopedSlots: { customRender: 'goods_price' }
   },
   {
-    title: '节假日价格',
-    dataIndex: 'holiday_price',
-    width: 120,
-    scopedSlots: { customRender: 'holiday_price' }
-  },
-  {
     title: '划线价格',
     dataIndex: 'line_price',
     width: 120,
@@ -54,7 +48,6 @@ const defaultSkuItemData = {
   image: {},
   // imageList: [],
   goods_price: '',
-  holiday_price: '',
   line_price: '',
   stock_num: '',
   goods_weight: '',
@@ -97,10 +90,8 @@ export default class MultiSpec {
    * @param {array} specList 规格列表
    * @param {array} skuList SKU列表
    */
-  constructor () {
+  constructor() {
     this.multiSpecData = {
-      // 是否是多选规格
-      isMulti: false,
       // 规格列表
       specList: [],
       // SKU列表
@@ -256,7 +247,6 @@ export default class MultiSpec {
     specList.push({
       key: specList.length || 0,
       spec_name: '',
-      spec_type: 'text', // 默认为文本类型 多了个date类型
       valueList: []
     })
     // 默认规格值
@@ -268,22 +258,11 @@ export default class MultiSpec {
   handleAddSpecValue (groupIndex) {
     const specGroupItem = this.multiSpecData.specList[groupIndex]
     const specValueList = specGroupItem.valueList
-    const newSpecValue = {
+    specValueList.push({
       key: specValueList.length || 0,
       groupKey: specGroupItem.key,
       spec_value: ''
-    }
-    // 如果是日期类型，添加spec_date_range属性
-    if (specGroupItem.spec_type === 'date') {
-      // 初始化为空数组
-      newSpecValue.spec_date_range = []
-      // 如果spec_value已经存在且包含日期范围格式，解析并设置到spec_date_range
-      if (newSpecValue.spec_value && newSpecValue.spec_value.includes('~')) {
-        const dateRange = newSpecValue.spec_value.split('~')
-        newSpecValue.spec_date_range = dateRange
-      }
-    }
-    specValueList.push(newSpecValue)
+    })
     // 刷新规格值的key
     this.onRefreshSpecValueKey(groupIndex)
   }
@@ -364,7 +343,6 @@ export default class MultiSpec {
   verifySkuList () {
     const columns = [
       { field: 'goods_price', name: '商品价格' },
-      // 节假日价格不是必填项
       { field: 'stock_num', name: '库存数量' },
       { field: 'goods_weight', name: '商品重量' }
     ]
